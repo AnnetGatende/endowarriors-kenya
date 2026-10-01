@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EndoWarriors Kenya — Patient Support & Clinical Navigator</title>
+<meta name="description" content="An empathetic Kenyan endometriosis support, symptom tracking, procedure-readiness and community web application.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{endo:{yellow:'#F59E0B',amber:'#EAB308',cream:'#FFFDF7',pale:'#FEFCE8',slate:'#0F172A',emerald:'#059669',rose:'#E11D48'}},fontFamily:{sans:['Plus Jakarta Sans','sans-serif'],display:['Playfair Display','serif']}}}};</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="toastRoot" class="fixed right-4 top-24 z-[100] space-y-2"></div>
+<header class="sticky top-0 z-40 border-b border-amber-100 bg-[#FFFDF7]/95 backdrop-blur-xl">
+  <div class="bg-amber-400 text-slate-900 text-xs font-bold">
+    <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+      <span>Njano Advocacy Movement · Your pain is valid and believed.</span>
+      <span class="hidden sm:block">Kenya · Evidence-informed patient guidance</span>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+    <button onclick="goTab('dashboard')" class="flex items-center gap-2 min-w-0">
+      <span class="w-10 h-10 rounded-2xl bg-amber-400 grid place-items-center text-slate-900 font-bold shadow-sm">EW</span>
+      <span class="text-left">
+        <b class="font-display text-xl">EndoWarriors</b>
+        <small class="block text-[10px] uppercase tracking-widest text-slate-500">Kenya</small>
+      </span>
+    </button>
+    <div class="ml-auto flex items-center gap-2">
+      <span class="hidden md:flex items-center gap-1 text-xs font-semibold bg-emerald-50 text-emerald-700 px-3 py-2 rounded-full">
+        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+        <span id="locationBadge">Mombasa County</span>
+      </span>
+      <button onclick="openModal('sosModal')" aria-label="Open SOS flare-up support" class="sos-pulse bg-rose-600 text-white px-3 py-2 rounded-full text-xs font-extrabold flex items-center gap-1">
+        <i data-lucide="siren" class="w-4 h-4"></i>
+        <span>SOS Flare-Up</span>
+      </button>
+      <div class="flex items-center gap-1.5">
+        <button id="headerSignIn" onclick="openAuth()" class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">
+          <i data-lucide="log-in" class="w-4 h-4"></i>Sign In
+        </button>
+        <button id="headerSignOut" onclick="signOut()" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold">
+          <i data-lucide="log-out" class="w-4 h-4"></i>Sign Out
+        </button>
+        <button onclick="openAuth()" class="w-10 h-10 rounded-full bg-slate-100 grid place-items-center text-slate-800" aria-label="Profile">
+          <i data-lucide="user-round" class="w-5 h-5"></i>
+        </button>
+        <!-- Mobile Hamburger Button -->
+        <button id="hamburgerBtn" onclick="toggleMobileMenu()" class="md:hidden w-10 h-10 rounded-xl bg-slate-100 grid place-items-center text-slate-800" aria-label="Toggle Menu">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Desktop Nav -->
+  <nav class="hidden md:block max-w-7xl mx-auto px-4 pb-3">
+    <div class="flex gap-2" id="tabs">
+      <button class="tab-btn tab-active rounded-full px-4 py-2 text-xs font-bold flex gap-2 items-center" data-tab="dashboard">
+        <i data-lucide="heart-pulse" class="w-4 h-4"></i>Dashboard
+      </button>
+      <button class="tab-btn rounded-full px-4 py-2 text-xs font-bold flex gap-2 items-center" data-tab="directory">
+        <i data-lucide="stethoscope" class="w-4 h-4"></i>Medical Directory
+      </button>
+      <button class="tab-btn rounded-full px-4 py-2 text-xs font-bold flex gap-2 items-center" data-tab="readiness">
+        <i data-lucide="scan-line" class="w-4 h-4"></i>Scan & Readiness
+      </button>
+      <button class="tab-btn rounded-full px-4 py-2 text-xs font-bold flex gap-2 items-center" data-tab="food">
+        <i data-lucide="salad" class="w-4 h-4"></i>Healing Foods
+      </button>
+      <button class="tab-btn rounded-full px-4 py-2 text-xs font-bold flex gap-2 items-center" data-tab="relief">
+        <i data-lucide="hand-heart" class="w-4 h-4"></i>Relief Hub
+      </button>
+      <button class="tab-btn rounded-full px-4 py-2 text-xs font-bold flex gap-2 items-center" data-tab="community">
+        <i data-lucide="messages-square" class="w-4 h-4"></i>Safe Space
+      </button>
+    </div>
+  </nav>
+  <!-- Mobile Collapsible Menu -->
+  <div id="mobileMenu" class="md:hidden hidden border-t border-amber-100 bg-[#FFFDF7] px-4 py-3 space-y-2">
+    <button class="mobile-tab-btn w-full text-left tab-active rounded-xl px-4 py-2.5 text-xs font-bold flex gap-2 items-center" data-tab="dashboard">
+      <i data-lucide="heart-pulse" class="w-4 h-4"></i>Dashboard
+    </button>
+    <button class="mobile-tab-btn w-full text-left rounded-xl px-4 py-2.5 text-xs font-bold flex gap-2 items-center" data-tab="directory">
+      <i data-lucide="stethoscope" class="w-4 h-4"></i>Medical Directory
+    </button>
+    <button class="mobile-tab-btn w-full text-left rounded-xl px-4 py-2.5 text-xs font-bold flex gap-2 items-center" data-tab="readiness">
+      <i data-lucide="scan-line" class="w-4 h-4"></i>Scan & Readiness
+    </button>
+    <button class="mobile-tab-btn w-full text-left rounded-xl px-4 py-2.5 text-xs font-bold flex gap-2 items-center" data-tab="food">
+      <i data-lucide="salad" class="w-4 h-4"></i>Healing Foods
+    </button>
+    <button class="mobile-tab-btn w-full text-left rounded-xl px-4 py-2.5 text-xs font-bold flex gap-2 items-center" data-tab="relief">
+      <i data-lucide="hand-heart" class="w-4 h-4"></i>Relief Hub
+    </button>
+    <button class="mobile-tab-btn w-full text-left rounded-xl px-4 py-2.5 text-xs font-bold flex gap-2 items-center" data-tab="community">
+      <i data-lucide="messages-square" class="w-4 h-4"></i>Safe Space
+    </button>
+  </div>
+</header>
+<main class="max-w-7xl mx-auto px-4 py-6">
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="tab-panel space-y-6">
+    <div class="hero-bg rounded-[2rem] text-white p-6 md:p-10 relative overflow-hidden shadow-soft">
+      <div class="absolute inset-0 bg-slate-950/70 z-0"></div>
+      <div class="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-amber-400/20 blur-3xl z-0"></div>
+      <div class="relative z-10 max-w-3xl">
+        <div class="text-amber-300 text-sm font-bold mb-2" id="greeting">Karibu, Warrior</div>
+        <h1 class="font-display text-4xl md:text-6xl leading-tight">We see you. We believe your pain.</h1>
+        <p class="mt-4 text-slate-300 text-sm md:text-base leading-7">You are not faking it. You do not have to prove that your pain is real. Track patterns, prepare for appointments, and find support without judgment.</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button onclick="openModal('sosModal')" class="bg-rose-600 hover:bg-rose-700 px-4 py-3 rounded-xl font-bold text-sm text-white">SOS Flare-Up Protocol</button>
+          <button onclick="openReport()" class="bg-white/10 hover:bg-white/15 px-4 py-3 rounded-xl font-bold text-sm text-white">Export Doctor Visit Report</button>
+          <button onclick="goTab('food')" class="bg-amber-400 text-slate-900 hover:bg-amber-300 px-4 py-3 rounded-xl font-bold text-sm">Healing Foods</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid lg:grid-cols-[1.5fr_.5fr] gap-6">
+      <div class="bg-white rounded-3xl border border-amber-100 p-5 shadow-soft">
+        <div class="flex justify-between items-center mb-5">
+          <div>
+            <h2 class="font-display text-2xl">Today's pain diary</h2>
+            <p class="text-xs text-slate-500">Private on this device · saved locally</p>
+          </div>
+          <span id="painStatus" class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">Mild Discomfort</span>
+        </div>
+        <form id="painForm" class="space-y-5">
+          <div>
+            <div class="flex justify-between items-end">
+              <label class="font-bold text-sm">Pain intensity</label>
+              <span id="painValue" class="font-display text-4xl text-amber-500">1/10</span>
+            </div>
+            <input id="pain" type="range" min="1" max="10" value="1" class="w-full mt-2">
+          </div>
+          <div>
+            <label class="font-bold text-sm">Menstrual flow</label>
+            <select id="flow" class="field">
+              <option>None</option>
+              <option>Spotting</option>
+              <option>Light</option>
+              <option>Medium</option>
+              <option>Heavy</option>
+              <option>Clots</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-sm">Where does it hurt?</label>
+            <div id="locations" class="grid sm:grid-cols-2 gap-2 mt-2"></div>
+          </div>
+          <div>
+            <label class="font-bold text-sm">Accompanying symptoms</label>
+            <div id="symptoms" class="grid sm:grid-cols-2 gap-2 mt-2"></div>
+          </div>
+          <div>
+            <label class="font-bold text-sm">Suspected triggers</label>
+            <div id="triggers" class="grid sm:grid-cols-2 gap-2 mt-2"></div>
+          </div>
+          <div>
+            <label class="font-bold text-sm">What helped?</label>
+            <div id="reliefs" class="grid sm:grid-cols-2 gap-2 mt-2"></div>
+          </div>
+          <div>
+            <label class="font-bold text-sm">Emotional state</label>
+            <select id="emotion" class="field">
+              <option>Peaceful</option>
+              <option>Managing</option>
+              <option>Exhausted</option>
+              <option>Anxious</option>
+              <option>In tears</option>
+              <option>Angry at gaslighting</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-sm">Private note</label>
+            <textarea id="note" rows="3" class="field" placeholder="What would you want your doctor or future self to know?"></textarea>
+          </div>
+          <button class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold" type="submit">Save today's entry</button>
+        </form>
+      </div>
+      <aside class="space-y-4">
+        <div class="bg-white rounded-3xl border border-amber-100 p-5 shadow-soft">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 grid place-items-center text-amber-800 font-bold text-lg">EW</div>
+            <div>
+              <b id="profileName">Warrior</b>
+              <p id="profileStatus" class="text-xs text-slate-500">Status: Not set</p>
+              <p id="profileCounty" class="text-xs text-slate-500">County: Not set</p>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-amber-50 rounded-2xl p-4">
+            <p class="text-xs text-slate-500">Average pain</p>
+            <b id="avgPain" class="font-display text-3xl">—</b>
+          </div>
+          <div class="bg-emerald-50 rounded-2xl p-4">
+            <p class="text-xs text-slate-500">Days logged</p>
+            <b id="daysLogged" class="font-display text-3xl">0</b>
+          </div>
+        </div>
+        <div class="bg-white rounded-3xl border border-slate-100 p-5">
+          <h3 class="font-bold mb-3">Recent logs</h3>
+          <div id="recentLogs" class="space-y-3 max-h-96 overflow-auto scrollbar"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- DIRECTORY -->
+  <section id="directory" class="tab-panel hidden space-y-5">
+    <div class="rounded-3xl directory-hero p-6 text-white relative overflow-hidden shadow-soft">
+      <div class="absolute inset-0 bg-slate-950/70 z-0"></div>
+      <div class="relative z-10">
+        <p class="text-xs font-extrabold uppercase tracking-widest text-amber-300">Kenya · Specialist finder</p>
+        <h2 class="font-display text-4xl mt-1">Find care without the runaround.</h2>
+        <p class="text-sm text-slate-200 mt-2 max-w-3xl">Provider information below is a starting point, not a certification or endorsement. Confirm current credentials, services, fees, insurance and availability directly with the clinic.</p>
+      </div>
+    </div>
+    <div class="bg-white p-4 rounded-3xl border shadow-soft grid md:grid-cols-4 gap-3">
+      <input id="docSearch" class="field" placeholder="Search doctor, clinic or hospital">
+      <select id="countyFilter" class="field">
+        <option value="">All counties</option>
+        <option>Nairobi</option>
+        <option>Mombasa</option>
+        <option>Kisumu</option>
+        <option>Nakuru</option>
+        <option>Uasin Gishu</option>
+        <option>Kiambu</option>
+      </select>
+      <select id="specFilter" class="field">
+        <option value="">All specialties</option>
+        <option>Excision / minimally invasive surgery</option>
+        <option>Reproductive medicine</option>
+        <option>Pelvic physiotherapy</option>
+        <option>Obstetrics & gynaecology</option>
+      </select>
+      <select id="insFilter" class="field">
+        <option value="">Any payment / insurance</option>
+        <option>SHA</option>
+        <option>NHIF</option>
+        <option>Jubilee</option>
+        <option>AAR</option>
+        <option>Britam</option>
+        <option>Cash</option>
+      </select>
+    </div>
+    <div id="doctorGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+  </section>
+
+  <!-- READINESS -->
+  <section id="readiness" class="tab-panel hidden space-y-6">
+    <div class="rounded-3xl bg-slate-900 text-white p-6 md:p-8">
+      <p class="text-amber-300 text-xs font-bold uppercase tracking-widest">MRI & procedure readiness</p>
+      <h2 class="font-display text-4xl mt-1">Give your nervous system a softer room.</h2>
+      <p class="text-slate-300 text-sm mt-2 max-w-3xl">This is a grounding and preparation tool, not a replacement for medical advice. If you feel unsafe or acutely unwell, seek clinical help.</p>
+    </div>
+    <div class="grid lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-3xl border p-6 shadow-soft">
+        <div class="flex flex-wrap justify-between gap-3">
+          <div>
+            <h3 class="font-display text-2xl">Nervous system reset</h3>
+            <p id="breathInstruction" class="text-sm text-slate-500">Choose a breathing mode.</p>
+          </div>
+          <select id="breathMode" class="field max-w-xs">
+            <option value="478">4-7-8 Relaxing</option>
+            <option value="box">4×4 Box Breathing</option>
+            <option value="55">5-5 Calming</option>
+          </select>
+        </div>
+        <div class="grid place-items-center py-8">
+          <div id="breathRing" class="breath-ring">
+            <div class="text-center">
+              <b id="breathCount" class="font-display text-4xl">—</b>
+              <p id="breathPhase" class="text-xs text-slate-500">Ready</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-center gap-3">
+          <button id="breathStart" onclick="toggleBreathing()" class="bg-slate-900 text-white px-5 py-3 rounded-xl font-bold">Start</button>
+          <button onclick="resetBreathing()" class="bg-slate-100 px-5 py-3 rounded-xl font-bold text-slate-800">Reset</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-3xl border p-6 shadow-soft">
+        <h3 class="font-display text-2xl">Offline soundscape synthesizer</h3>
+        <p class="text-sm text-slate-500 mb-5">Generated locally with Web Audio API. Start audio after a user gesture.</p>
+        <div class="space-y-3">
+          <button onclick="toggleRain()" id="rainBtn" class="w-full text-left p-4 rounded-2xl bg-sky-50 border border-sky-100 font-bold text-sky-900">Rain Soundscape <span class="float-right" id="rainState">Off</span></button>
+          <button onclick="toggleOm()" id="omBtn" class="w-full text-left p-4 rounded-2xl bg-amber-50 border border-amber-100 font-bold text-amber-900">Warm Harmonic Hum (136.1 Hz) <span class="float-right" id="omState">Off</span></button>
+        </div>
+        <div class="mt-5 p-4 rounded-2xl bg-slate-50 text-xs text-slate-600">Keep volume comfortable. Stop if the sound increases anxiety or discomfort.</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-3xl border p-6 shadow-soft">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-display text-2xl">5–4–3–2–1 grounding</h3>
+          <p class="text-sm text-slate-500">A step-by-step sensory anchor for panic.</p>
+        </div>
+        <span id="groundStep" class="text-xs font-bold bg-amber-100 px-3 py-2 rounded-full text-amber-900">1 / 5</span>
+      </div>
+      <div class="mt-6 grid md:grid-cols-[1fr_auto] gap-5 items-center">
+        <div>
+          <p id="groundPrompt" class="font-display text-3xl"></p>
+          <p id="groundHint" class="text-slate-600 mt-2"></p>
+          <textarea id="groundInput" class="field mt-4" rows="3" placeholder="Type what you notice, or simply say it quietly to yourself."></textarea>
+        </div>
+        <div class="flex md:flex-col gap-2">
+          <button onclick="groundPrev()" class="px-4 py-3 rounded-xl bg-slate-100 font-bold text-slate-800">Back</button>
+          <button onclick="groundNext()" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-bold">Next</button>
+        </div>
+      </div>
+    </div>
+    <div class="bg-amber-50 rounded-3xl border border-amber-200 p-6">
+      <h3 class="font-display text-2xl">Kenyan MRI survival notes</h3>
+      <div class="grid md:grid-cols-2 gap-4 mt-4 text-sm leading-6 text-slate-800">
+        <div>
+          <b>Before you start</b>
+          <ul class="list-disc ml-5 mt-2 space-y-1">
+            <li>Ask whether an angled prism/mirror is available if it helps you feel oriented.</li>
+            <li>Ask where the emergency call button/squeeze bulb is and how to use it.</li>
+            <li>Tell the radiographer about claustrophobia, pain, implants and medications.</li>
+          </ul>
+        </div>
+        <div>
+          <b>What may happen</b>
+          <ul class="list-disc ml-5 mt-2 space-y-1">
+            <li>Some scans use contrast; staff should explain why it is needed and check relevant risks.</li>
+            <li>Buscopan may be used in some pelvic imaging protocols to reduce bowel movement; follow the radiology team's instructions.</li>
+            <li>After laparoscopy, shoulder-tip pain can occur from gas irritating the diaphragm/phrenic nerve; ask your surgical team how to manage it.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOD -->
+  <section id="food" class="tab-panel hidden space-y-5">
+    <div class="rounded-3xl food-hero p-6 md:p-8 text-white relative overflow-hidden shadow-soft">
+      <div class="absolute inset-0 bg-slate-950/70 z-0"></div>
+      <div class="relative z-10">
+        <p class="text-emerald-300 text-xs font-bold uppercase tracking-widest">Food & comfort</p>
+        <h2 class="font-display text-4xl">Kenyan foods, without miracle claims.</h2>
+        <p class="text-emerald-100 mt-2 max-w-3xl text-sm">Food can support overall nutrition, but no food is proven to remove endometriosis lesions. Use this guide to build balanced meals and identify your own tolerances.</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2" id="foodCats"></div>
+    <div class="flex gap-3">
+      <input id="foodSearch" class="field" placeholder="Search managu, ginger, avocado...">
+      <button onclick="document.getElementById('foodSearch').value='';renderFoods()" class="px-4 rounded-xl bg-slate-100 font-bold text-slate-800">Clear</button>
+    </div>
+    <div id="foodGrid" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5"></div>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="bg-rose-50 border border-rose-100 rounded-3xl p-5 text-slate-800">
+        <b>Limit if they trigger you</b>
+        <p class="text-sm mt-2">Ultra-processed/refined foods, alcohol, or other foods that consistently worsen your symptoms can be discussed with a clinician or dietitian.</p>
+      </div>
+      <div class="bg-amber-50 border border-amber-100 rounded-3xl p-5 text-slate-800">
+        <b>Golden Ginger & Turmeric Elixir</b>
+        <p class="text-sm mt-2">Warm water + fresh ginger + turmeric. Treat it as a comfort drink, not a substitute for prescribed treatment.</p>
+      </div>
+      <div class="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 text-slate-800">
+        <b>Simple balanced plate</b>
+        <p class="text-sm mt-2">Greens + a protein such as fish/beans + a filling carbohydrate + fruit, adjusted to your tolerance and budget.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- RELIEF -->
+  <section id="relief" class="tab-panel hidden space-y-6">
+    <div class="rounded-3xl bg-amber-100 p-6 text-slate-900">
+      <p class="text-xs font-extrabold uppercase tracking-widest text-amber-800">Solidarity & financial relief</p>
+      <h2 class="font-display text-4xl">You should not have to carry everything alone.</h2>
+      <p class="text-sm mt-2">The campaign examples below are clearly marked as demo records. Do not send money from this prototype unless you independently verify a fundraiser and beneficiary.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5" id="campaignGrid"></div>
+    <div class="flex flex-wrap gap-3">
+      <button onclick="openModal('reliefModal')" class="bg-slate-900 text-white px-5 py-3 rounded-xl font-bold">Apply for Verified Surgery Relief</button>
+      <button onclick="openModal('hrModal')" class="bg-white border px-5 py-3 rounded-xl font-bold text-slate-800">Workplace & Ally Guide</button>
+    </div>
+    <div class="bg-white rounded-3xl border p-6">
+      <h3 class="font-display text-2xl">Workplace note</h3>
+      <p class="text-sm leading-6 mt-2 text-slate-700">Kenyan employment law contains sick-leave provisions, but the exact entitlement depends on the applicable law, contract and circumstances. Ask HR and check the current Employment Act/official guidance rather than relying on a generic template.</p>
+      <button onclick="copyText(document.getElementById('hrLetter').innerText)" class="mt-4 bg-amber-400 text-slate-900 px-4 py-2 rounded-xl font-bold text-sm">Copy HR disclosure template</button>
+      <p id="hrLetter" class="mt-4 p-4 bg-slate-50 rounded-2xl text-sm leading-6 text-slate-800">Dear HR Team, I am managing a diagnosed medical condition that may require periodic medical appointments and, during acute episodes, medically supported rest. I will provide appropriate documentation and communicate as early as possible. I am requesting a confidential conversation about reasonable scheduling and leave arrangements available under my employment terms and applicable Kenyan law. Thank you for handling this information sensitively.</p>
+    </div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="community" class="tab-panel hidden space-y-5">
+    <div class="rounded-3xl bg-slate-900 text-white p-6">
+      <p class="text-amber-300 text-xs font-bold uppercase tracking-widest">Safe-space community</p>
+      <h2 class="font-display text-4xl">Sheng, English, Swahili — all welcome.</h2>
+      <p class="text-slate-300 text-sm mt-2">No diagnosis competitions. No shaming. No medical misinformation. Peer support is not a substitute for clinical care.</p>
+      <button onclick="openModal('discussionModal')" class="mt-5 bg-amber-400 text-slate-900 px-5 py-3 rounded-xl font-bold">Start a Community Discussion</button>
+    </div>
+    <section aria-labelledby="realStoriesTitle" class="space-y-4">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-amber-800">Community voices · sample stories</p>
+        <h2 id="realStoriesTitle" class="font-display text-3xl">Real Stories</h2>
+        <p class="text-sm text-slate-600 mt-1">Placeholder stories and photos for this prototype. Replace them only after receiving permission.</p>
+      </div>
+      <div class="stories-carousel" aria-label="Community member stories" aria-roledescription="carousel">
+        <div id="storiesTrack" class="stories-track"></div>
+        <div class="stories-controls">
+          <button type="button" onclick="moveStory(-1)" class="story-nav-btn" aria-label="Previous story">‹</button>
+          <div id="storyDots" class="story-dots" aria-label="Choose a story"></div>
+          <button type="button" onclick="moveStory(1)" class="story-nav-btn" aria-label="Next story">›</button>
+        </div>
+      </div>
+    </section>
+    <div class="flex flex-wrap gap-2" id="forumCats"></div>
+    <div id="posts" class="space-y-4"></div>
+  </section>
+</main>
+
+<footer class="mt-12 border-t border-amber-100 bg-slate-950 text-white">
+  <div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="grid md:grid-cols-4 gap-8">
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-2">
+          <span class="w-10 h-10 rounded-2xl bg-amber-400 text-slate-900 grid place-items-center font-bold">EW</span>
+          <span>
+            <b class="font-display text-xl">EndoWarriors Kenya</b>
+            <small class="block text-xs text-slate-400">Njano-inspired support space</small>
+          </span>
+        </div>
+        <p class="text-sm text-slate-300 leading-6 mt-4 max-w-xl">A patient-support prototype for symptom tracking, procedure preparation, community support and finding care. It does not replace a clinician, emergency service or secure medical-record system.</p>
+      </div>
+      <div>
+        <h3 class="font-bold">Quick access</h3>
+        <div class="space-y-2 mt-3 text-sm text-slate-300">
+          <button onclick="goTab('dashboard')" class="block hover:text-amber-300 text-left">Dashboard</button>
+          <button onclick="goTab('directory')" class="block hover:text-amber-300 text-left">Medical Directory</button>
+          <button onclick="goTab('readiness')" class="block hover:text-amber-300 text-left">Scan & Readiness</button>
+          <button onclick="goTab('food')" class="block hover:text-amber-300 text-left">Healing Foods</button>
+        </div>
+      </div>
+      <div>
+        <h3 class="font-bold">Need urgent help?</h3>
+        <p class="text-sm text-slate-300 mt-3">Use SOS for the emergency contacts included in this prototype.</p>
+        <button onclick="openModal('sosModal')" class="mt-3 bg-rose-600 px-4 py-2.5 rounded-xl text-sm font-bold text-white">Open SOS</button>
+      </div>
+    </div>
+    <div class="border-t border-slate-800 mt-8 pt-5 flex flex-col sm:flex-row justify-between gap-3 text-xs text-slate-400">
+      <span>© 2026 EndoWarriors Kenya · Prototype</span>
+    </div>
+  </div>
+</footer>
+
+<!-- MODALS -->
+<div id="sosModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4 overflow-auto">
+  <div class="max-w-2xl mx-auto mt-8 bg-white rounded-3xl shadow-2xl overflow-hidden">
+    <div class="bg-rose-600 text-white p-6 flex justify-between items-start">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest">Acute flare-up</p>
+        <h2 class="font-display text-3xl mt-1">You are not alone right now.</h2>
+      </div>
+      <button onclick="closeModal('sosModal')" class="w-10 h-10 rounded-full bg-white/15 grid place-items-center font-bold text-lg">×</button>
+    </div>
+    <div class="p-6 space-y-5">
+      <div class="bg-rose-50 rounded-2xl p-4 text-sm text-slate-800">If pain is new, extreme, associated with fainting, heavy bleeding, difficulty breathing, chest pain, pregnancy concerns, or another emergency symptom, seek urgent medical care.</div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <label class="flex gap-3 p-3 rounded-xl bg-slate-50 text-xs text-slate-800 font-semibold items-center"><input class="check" type="checkbox">Use continuous comfortable heat</label>
+        <label class="flex gap-3 p-3 rounded-xl bg-slate-50 text-xs text-slate-800 font-semibold items-center"><input class="check" type="checkbox">Side-lying fetal position + pillow</label>
+        <label class="flex gap-3 p-3 rounded-xl bg-slate-50 text-xs text-slate-800 font-semibold items-center"><input class="check" type="checkbox">Warm ginger tea if tolerated</label>
+        <label class="flex gap-3 p-3 rounded-xl bg-slate-50 text-xs text-slate-800 font-semibold items-center"><input class="check" type="checkbox">Use prescribed analgesics as directed</label>
+      </div>
+      <div class="bg-amber-50 rounded-2xl p-4">
+        <div class="flex justify-between font-bold text-slate-900"><b>4–7–8 reset</b><span id="sosCount">Ready</span></div>
+        <div class="h-2 bg-amber-100 rounded-full mt-3 overflow-hidden"><div id="sosBar" class="h-2 bg-amber-400 rounded-full" style="width:0%"></div></div>
+        <button onclick="sosBreath()" class="mt-3 bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-xs">Start reset</button>
+      </div>
+      <div>
+        <label class="font-bold text-sm">Message a loved one</label>
+        <textarea id="sosMessage" class="field mt-2" rows="4">Habari. I am experiencing an acute Endometriosis pain crisis right now at my location. The pain is severe. Please check in on me and help me get support if I need it.</textarea>
+        <button onclick="copyText(document.getElementById('sosMessage').value)" class="mt-2 px-4 py-2 bg-amber-400 text-slate-900 rounded-xl font-bold text-sm">Copy message</button>
+      </div>
+      <div>
+        <b class="text-sm">Emergency contacts</b>
+        <div class="grid sm:grid-cols-2 gap-2 mt-2">
+          <a class="contact" href="tel:0721225285">St John Ambulance · 0721 225 285</a>
+          <a class="contact" href="tel:1199">Kenya Red Cross · 1199</a>
+          <a class="contact" href="tel:+254703082000">Nairobi Hospital ER · +254 703 082 000</a>
+          <a class="contact" href="tel:+254711092000">Aga Khan ER · +254 711 092 000</a>
+          <a class="contact" href="tel:+254733606752">MP Shah Casualty · +254 733 606 752</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="authModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4 overflow-auto">
+  <div class="max-w-md mx-auto mt-10 sm:mt-20 bg-white rounded-3xl p-6 shadow-2xl">
+    <div class="flex justify-between gap-4 items-start">
+      <div>
+        <p class="text-xs uppercase tracking-[.2em] text-amber-600 font-extrabold">Warrior account</p>
+        <h2 class="font-display text-3xl mt-1">Your safe space</h2>
+      </div>
+      <button onclick="closeModal('authModal')" class="w-9 h-9 rounded-full bg-slate-100 font-bold grid place-items-center">×</button>
+    </div>
+    <div id="authSignedOut" class="mt-5">
+      <div class="flex bg-slate-100 p-1 rounded-xl">
+        <button id="signInBtn" class="flex-1 py-2 rounded-lg bg-white font-bold text-sm" onclick="setAuth('in')">Sign In</button>
+        <button id="signUpBtn" class="flex-1 py-2 rounded-lg text-sm text-slate-600" onclick="setAuth('up')">Sign Up</button>
+      </div>
+      <div class="space-y-3 mt-5">
+        <input id="authName" class="field hidden" placeholder="Name" autocomplete="name">
+        <input id="authContact" class="field" placeholder="Phone or email" autocomplete="username">
+        <input id="authPassword" type="password" class="field" placeholder="Password" autocomplete="current-password">
+        <button id="authSubmit" onclick="saveAuth()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Sign In</button>
+        <button onclick="demoProfile()" class="w-full bg-amber-400 text-slate-900 py-3 rounded-xl font-bold">Quick Demo Profile — Stage 4 Warrior</button>
+      </div>
+    </div>
+    <div id="authSignedIn" class="hidden mt-5">
+      <div class="bg-emerald-50 rounded-2xl p-4">
+        <p class="text-xs font-bold uppercase tracking-widest text-emerald-700">Signed in</p>
+        <h3 id="authAccountName" class="font-display text-2xl mt-1">Warrior</h3>
+        <p id="authAccountContact" class="text-xs text-slate-600 mt-1"></p>
+      </div>
+      <button onclick="signOut()" class="w-full mt-4 bg-rose-600 text-white py-3 rounded-xl font-bold">Sign Out</button>
+    </div>
+    <p class="text-xs text-slate-500 mt-4">This frontend demo stores account data in this browser only. Do not use real medical information or a real password here.</p>
+  </div>
+</div>
+
+<div id="reviewModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4">
+  <div class="max-w-lg mx-auto mt-20 bg-white rounded-3xl p-6 shadow-2xl">
+    <div class="flex justify-between items-center"><h2 class="font-display text-2xl">Community review</h2><button onclick="closeModal('reviewModal')" class="font-bold text-xl">×</button></div>
+    <p id="reviewDoctor" class="text-sm text-slate-500 mt-2"></p>
+    <textarea id="reviewText" class="field mt-4" rows="5" placeholder="Share an anonymized experience. Do not include another person's private medical information."></textarea>
+    <button onclick="submitReview()" class="mt-3 w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Submit anonymized review</button>
+  </div>
+</div>
+
+<div id="foodModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4">
+  <div class="max-w-lg mx-auto mt-16 bg-white rounded-3xl overflow-hidden shadow-2xl">
+    <img id="foodModalImg" class="w-full h-56 object-cover" alt="Food detail">
+    <div class="p-6">
+      <div class="flex justify-between items-start"><h2 id="foodModalTitle" class="font-display text-3xl"></h2><button onclick="closeModal('foodModal')" class="font-bold text-xl">×</button></div>
+      <p id="foodModalText" class="text-sm leading-6 text-slate-700 mt-3"></p>
+      <p id="foodModalPrep" class="text-sm leading-6 text-slate-800 mt-3 bg-emerald-50 p-4 rounded-2xl"></p>
+    </div>
+  </div>
+</div>
+
+<div id="paymentModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4">
+  <div class="max-w-md mx-auto mt-20 bg-white rounded-3xl p-6 shadow-2xl">
+    <div class="flex justify-between items-center"><h2 class="font-display text-2xl">Support via M-Pesa</h2><button onclick="closeModal('paymentModal')" class="font-bold text-xl">×</button></div>
+    <div class="bg-amber-50 rounded-2xl p-5 mt-4">
+      <p class="text-xs text-slate-500 font-bold">DEMO / VERIFY BEFORE PAYMENT</p>
+      <b id="payCampaign" class="block mt-1 text-lg"></b>
+      <p class="mt-4 text-sm font-semibold">Paybill / Till</p>
+      <div class="flex gap-2 mt-1"><input id="payNumber" readonly class="field" value="Not supplied"><button onclick="copyText(document.getElementById('payNumber').value)" class="px-3 bg-slate-900 text-white rounded-xl text-xs font-bold">Copy</button></div>
+      <p class="mt-3 text-sm font-semibold">Account</p>
+      <input id="payAccount" readonly class="field mt-1" value="Verify beneficiary account">
+      <p class="text-xs text-slate-500 mt-4">No real payment credentials are embedded in this prototype.</p>
+    </div>
+  </div>
+</div>
+
+<div id="reliefModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4 overflow-auto">
+  <div class="max-w-2xl mx-auto mt-10 bg-white rounded-3xl p-6 shadow-2xl">
+    <div class="flex justify-between items-center"><h2 class="font-display text-2xl">Apply for verified surgery relief</h2><button onclick="closeModal('reliefModal')" class="font-bold text-xl">×</button></div>
+    <div class="grid sm:grid-cols-2 gap-3 mt-5">
+      <input class="field" placeholder="Full name">
+      <input class="field" placeholder="County">
+      <input class="field" placeholder="Phone">
+      <input class="field" placeholder="Hospital / clinic">
+      <input class="field" placeholder="Funding target (KES)">
+      <input class="field" placeholder="Preferred verification contact">
+    </div>
+    <textarea class="field mt-3" rows="4" placeholder="Briefly explain the need. Do not include unnecessary sensitive medical information."></textarea>
+    <div class="mt-4 text-sm space-y-2 text-slate-700">
+      <label class="flex gap-2 items-center"><input type="checkbox" class="check">I have a current medical quotation.</label>
+      <label class="flex gap-2 items-center"><input type="checkbox" class="check">I can provide verification documents to an authorized reviewer.</label>
+      <label class="flex gap-2 items-center"><input type="checkbox" class="check">I understand approval is not guaranteed.</label>
+    </div>
+    <button onclick="closeModal('reliefModal');toast('Application captured locally for this prototype. A real deployment needs secure backend verification.','success')" class="mt-5 w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Submit application</button>
+  </div>
+</div>
+
+<div id="hrModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4 overflow-auto">
+  <div class="max-w-2xl mx-auto mt-10 bg-white rounded-3xl p-6 shadow-2xl">
+    <div class="flex justify-between items-center"><h2 class="font-display text-2xl">Workplace & family ally guide</h2><button onclick="closeModal('hrModal')" class="font-bold text-xl">×</button></div>
+    <div class="space-y-4 mt-5 text-sm leading-6 text-slate-800">
+      <div class="p-4 rounded-2xl bg-amber-50">
+        <b>Workplace</b>
+        <p class="mt-1">Ask for confidential handling, predictable appointment time, and leave arrangements supported by your medical documentation and applicable employment terms.</p>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-50">
+        <b>Family myths</b>
+        <p class="mt-1">Suggestions like drinking hot water can be comforting, but they should not replace clinical evaluation. Endometriosis care should be individualized.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="discussionModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4">
+  <div class="max-w-lg mx-auto mt-16 bg-white rounded-3xl p-6 shadow-2xl">
+    <div class="flex justify-between items-center"><h2 class="font-display text-2xl">Start a discussion</h2><button onclick="closeModal('discussionModal')" class="font-bold text-xl">×</button></div>
+    <input id="postTitle" class="field mt-4" placeholder="Discussion title">
+    <div class="grid grid-cols-2 gap-2 mt-3">
+      <select id="postCat" class="field">
+        <option>Surgery & Recovery</option>
+        <option>Workplace Rights Kenya</option>
+        <option>Mental Wellbeing</option>
+        <option>Fertility & Healing</option>
+        <option>Doctor Reviews</option>
+      </select>
+      <select id="postLang" class="field">
+        <option>Sheng / English</option>
+        <option>English</option>
+        <option>Swahili</option>
+      </select>
+    </div>
+    <textarea id="postBody" class="field mt-3" rows="5" placeholder="Share your experience or question."></textarea>
+    <button onclick="addPost()" class="mt-3 w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Post</button>
+  </div>
+</div>
+
+<div id="storyModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4 overflow-auto" onclick="if(event.target===this)closeModal('storyModal')">
+  <article class="story-popup max-w-2xl mx-auto mt-8 bg-white rounded-3xl p-6 md:p-8 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="storyModalName">
+    <div class="flex justify-end"><button onclick="closeModal('storyModal')" class="font-bold text-xl px-2" aria-label="Close story">×</button></div>
+    <img id="storyModalPhoto" class="story-popup-photo" alt="">
+    <p class="text-xs font-bold uppercase tracking-widest text-amber-800 mt-5">Sample story · placeholder</p>
+    <h2 id="storyModalName" class="font-display text-3xl mt-1"></h2>
+    <p id="storyModalBody" class="text-sm leading-7 text-slate-700 mt-4 whitespace-pre-line"></p>
+  </article>
+</div>
+
+<div id="reportModal" class="modal hide fixed inset-0 z-50 modal-backdrop p-4 overflow-auto">
+  <div class="max-w-3xl mx-auto mt-8 bg-white rounded-3xl p-6 print-area shadow-2xl">
+    <div class="no-print flex justify-between items-center">
+      <h2 class="font-display text-2xl">Doctor visit clinical summary</h2>
+      <div class="flex gap-2">
+        <button onclick="window.print()" class="px-3 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs">Print / PDF</button>
+        <button onclick="closeModal('reportModal')" class="font-bold text-xl px-2">×</button>
+      </div>
+    </div>
+    <div id="reportBody" class="mt-5"></div>
+    <div class="mt-6 no-print text-xs text-slate-500">Evidence note: ESHRE and RCOG guidance support individualized diagnosis and treatment; normal imaging does not rule out endometriosis, and extensive bowel/bladder disease may warrant specialist multidisciplinary care. This report does not demand a particular operation.</div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
