@@ -17,12 +17,14 @@ function toast(msg, type = 'info') {
 }
 
 function openModal(id) {
+  if (id !== 'authModal' && !hasActiveSession()) return openAuth();
   $('#' + id).classList.remove('hide');
   document.body.classList.add('overflow-hidden');
   lucide.createIcons();
 }
 
 function closeModal(id) {
+  if (id === 'authModal' && !hasActiveSession()) return;
   $('#' + id).classList.add('hide');   if (!$$('.modal:not(.hide)').length) document.body.classList.remove('overflow-hidden');
 }
 
@@ -32,6 +34,7 @@ function copyText(t) {
 
 /* Mobile Hamburger Toggle */
 function toggleMobileMenu() {
+  if (!hasActiveSession()) return openAuth();
   const menu = $('#mobileMenu');
   menu.classList.toggle('hidden');
   lucide.createIcons();
@@ -366,8 +369,30 @@ function resetBreathing() {
 let audioCtx = null, rainNodes = null, omNodes = null;
 
 function ctx() {
-  audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    toast('Sound playback is not supported by this browser.');
+    return null;
+  }
+  try {
+    audioCtx ||= new AudioContextClass();
+  } catch {
+    toast('This browser could not start audio playback.');
+    return null;
+  }
   return audioCtx;
+}
+
+async function resumeAudioContext(context) {
+  try {
+    // Call resume immediately from the button gesture; mobile Safari requires this.
+    if (context.state !== 'running') await context.resume();
+    if (context.state !== 'running') throw new Error('Audio context is not running');
+    return true;
+  } catch {
+    toast('Tap the sound button again or check your phone’s sound settings.');
+    return false;
+  }
 }
 
 function noiseBuffer(c) {
@@ -376,14 +401,16 @@ function noiseBuffer(c) {
   return b;
 }
 
-function toggleRain() {
-  let c = ctx();
+async function toggleRain() {
+  if (!hasActiveSession()) return openAuth();
   if (rainNodes) {
     rainNodes.forEach(n => n.stop?.());
     rainNodes = null;
     $('#rainState').textContent = 'Off';
     return;
   }
+  let c = ctx();
+  if (!c || !await resumeAudioContext(c)) return;
   let src = c.createBufferSource();
   src.buffer = noiseBuffer(c);
   src.loop = true;
@@ -398,14 +425,16 @@ function toggleRain() {
   $('#rainState').textContent = 'On';
 }
 
-function toggleOm() {
-  let c = ctx();
+async function toggleOm() {
+  if (!hasActiveSession()) return openAuth();
   if (omNodes) {
     omNodes.forEach(n => n.stop?.());
     omNodes = null;
     $('#omState').textContent = 'Off';
     return;
   }
+  let c = ctx();
+  if (!c || !await resumeAudioContext(c)) return;
   let g = c.createGain();
   g.gain.value = 0.045;
   g.connect(c.destination);
@@ -423,6 +452,16 @@ function toggleOm() {
   b.start();
   omNodes = [a, b];
   $('#omState').textContent = 'On';
+}
+
+function stopSoundscapes() {
+  rainNodes?.forEach(node => { try { node.stop(); } catch {} });
+  omNodes?.forEach(node => { try { node.stop(); } catch {} });
+  rainNodes = null;
+  omNodes = null;
+  if ($('#rainState')) $('#rainState').textContent = 'Off';
+  if ($('#omState')) $('#omState').textContent = 'Off';
+  if (audioCtx?.state === 'running') audioCtx.suspend().catch(() => {});
 }
 
 let ground = 1;
@@ -461,7 +500,7 @@ function sosBreath() {
     $('#sosBar').style.width = ((19 - left) / 19 * 100) + '%';
     if (left <= 0) {
       clearInterval(t);
-      $('#sosCount').textContent = 'Done';       toast('Reset complete. Stay with your next comfortable breath.', 'success');     }   }, 1000); }  function goTab(id) {   $$('.tab-panel').forEach(x => x.classList.add('hidden'));
+      $('#sosCount').textContent = 'Done';       toast('Reset complete. Stay with your next comfortable breath.', 'success');     }   }, 1000); }  function goTab(id) {   if (!hasActiveSession()) return openAuth();   $$('.tab-panel').forEach(x => x.classList.add('hidden'));
   $('#' + id).classList.remove('hidden');   $$('.tab-btn').forEach(x => x.classList.toggle('tab-active', x.dataset.tab === id));$$('.mobile-tab-btn').forEach(x => x.classList.toggle('tab-active', x.dataset.tab === id));$('#mobileMenu').classList.add('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   lucide.createIcons();
@@ -471,6 +510,18 @@ $$('.tab-btn').forEach(b => b.addEventListener('click', () => goTab(b.dataset.ta
 ('.mobile-tab-btn').forEach(b => b.addEventListener('click', () => goTab(b.dataset.tab)));
 
 let authMode = 'in';
+
+function hasActiveSession() {
+  return !!(store.get('endowarriors_session', null) && store.get('endowarriors_user', null));
+}
+
+function setAppAccess(allowed) {
+  $('#appMain').classList.toggle('hidden', !allowed);
+  $('#appFooter').classList.toggle('hidden', !allowed);
+  $('#desktopNav').classList.toggle('auth-locked', !allowed);
+  $('#hamburgerBtn').classList.toggle('hidden', !allowed);
+  $('#authClose').classList.toggle('hidden', !allowed);
+}
 
 function setAuth(mode) {
   authMode = mode;
@@ -483,7 +534,7 @@ function setAuth(mode) {
 }
 
 function openAuth() {
-  const session = store.get('endowarriors_session', null);
+  const session = hasActiveSession();
   const user = store.get('endowarriors_user', null);
   $('#authSignedOut').classList.toggle('hidden', !!session);
   $('#authSignedIn').classList.toggle('hidden', !session);
@@ -527,37 +578,28 @@ function saveAuth() {
   toast('Welcome back, ' + account.name + '.', 'success');
 }
 
-function demoProfile() {
-  const contact = 'demo@endowarriors.local';
-  let accounts = store.get('endowarriors_accounts', {});
-  accounts[contact] = { name: 'Wanjiku', password: 'demo1234', status: 'Stage 4', county: 'Nairobi County' };
-  store.set('endowarriors_accounts', accounts);
-  store.set('endowarriors_user', { name: 'Wanjiku', contact, status: 'Stage 4', county: 'Nairobi County' });
-  store.set('endowarriors_session', { contact, at: new Date().toISOString() });
-  renderUser();
-  closeModal('authModal');
-  toast('Demo profile loaded and signed in.', 'success');
-}
-
 function signOut() {
   store.remove('endowarriors_session');
   $('#authSignedOut').classList.remove('hidden');
   $('#authSignedIn').classList.add('hidden');
+  stopSoundscapes();
   renderUser();
-  closeModal('authModal');
   toast('You have been signed out.', 'success');
 }
 
 function renderUser() {
   let u = store.get('endowarriors_user', null), session = store.get('endowarriors_session', null);
-  $('#headerSignIn').classList.toggle('hidden', !!session);
-  $('#headerSignOut').classList.toggle('hidden', !session);
-  if (!u || !session) {
+  const signedIn = !!(u && session);
+  setAppAccess(signedIn);
+  $('#headerSignIn').classList.toggle('hidden', signedIn);
+  $('#headerSignOut').classList.toggle('hidden', !signedIn);
+  if (!signedIn) {
     $('#profileName').textContent = 'Guest Warrior';
     $('#profileStatus').textContent = 'Status: Sign in to personalize';
     $('#profileCounty').textContent = 'County: Not linked';
     $('#greeting').textContent = 'Karibu, Warrior';
     $('#locationBadge').textContent = 'Kenya';
+    openAuth();
     return;
   }
   $('#profileName').textContent = u.name;

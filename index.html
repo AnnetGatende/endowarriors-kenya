@@ -57,7 +57,7 @@
     </div>
   </div>
   <!-- Desktop Nav -->
-  <nav class="hidden md:block max-w-7xl mx-auto px-4 pb-3">
+  <nav id="desktopNav" class="hidden md:block auth-locked max-w-7xl mx-auto px-4 pb-3">
     <div class="flex gap-2" id="tabs">
       <button class="tab-btn tab-active rounded-full px-4 py-2 text-xs font-bold flex gap-2 items-center" data-tab="dashboard">
         <i data-lucide="heart-pulse" class="w-4 h-4"></i>Dashboard
@@ -101,7 +101,7 @@
     </button>
   </div>
 </header>
-<main class="max-w-7xl mx-auto px-4 py-6">
+<main id="appMain" class="hidden max-w-7xl mx-auto px-4 py-6">
   <!-- DASHBOARD -->
   <section id="dashboard" class="tab-panel space-y-6">
     <div class="hero-bg rounded-[2rem] text-white p-6 md:p-10 relative overflow-hidden shadow-soft">
@@ -416,7 +416,7 @@
   </section>
 </main>
 
-<footer class="mt-12 border-t border-amber-100 bg-slate-950 text-white">
+<footer id="appFooter" class="hidden mt-12 border-t border-amber-100 bg-slate-950 text-white">
   <div class="max-w-7xl mx-auto px-4 py-10">
     <div class="grid md:grid-cols-4 gap-8">
       <div class="md:col-span-2">
@@ -499,7 +499,7 @@
         <p class="text-xs uppercase tracking-[.2em] text-amber-600 font-extrabold">Warrior account</p>
         <h2 class="font-display text-3xl mt-1">Your safe space</h2>
       </div>
-      <button onclick="closeModal('authModal')" class="w-9 h-9 rounded-full bg-slate-100 font-bold grid place-items-center">×</button>
+      <button id="authClose" onclick="closeModal('authModal')" class="w-9 h-9 rounded-full bg-slate-100 font-bold grid place-items-center" aria-label="Close account window">×</button>
     </div>
     <div id="authSignedOut" class="mt-5">
       <div class="flex bg-slate-100 p-1 rounded-xl">
@@ -511,7 +511,6 @@
         <input id="authContact" class="field" placeholder="Phone or email" autocomplete="username">
         <input id="authPassword" type="password" class="field" placeholder="Password" autocomplete="current-password">
         <button id="authSubmit" onclick="saveAuth()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Sign In</button>
-        <button onclick="demoProfile()" class="w-full bg-amber-400 text-slate-900 py-3 rounded-xl font-bold">Quick Demo Profile — Stage 4 Warrior</button>
       </div>
     </div>
     <div id="authSignedIn" class="hidden mt-5">

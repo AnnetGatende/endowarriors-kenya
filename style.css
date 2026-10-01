@@ -1,6 +1,7 @@
 html {
   scroll-behavior: smooth;
 }
+.auth-locked { display: none !important; }
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   background: #fff9f8;
